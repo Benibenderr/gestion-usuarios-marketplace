@@ -8,7 +8,11 @@ export const app = express();
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
-app.use(morgan('dev'));
+
+// Durante los tests no se loguean las peticiones, para no ensuciar la salida
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('dev'));
+}
 
 // Endpoint simple para verificar que la API está viva
 app.get('/api/health', (req, res) => {

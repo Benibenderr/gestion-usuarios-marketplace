@@ -30,6 +30,8 @@ gestion-usuarios-marketplace/
 │   │   ├── seed.js                       # carga de usuarios de ejemplo
 │   │   ├── app.js                        # configuración de Express
 │   │   └── server.js                     # arranque del servidor
+│   ├── tests/                            # suite de integración (Vitest + supertest)
+│   ├── vitest.config.js
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
@@ -96,6 +98,25 @@ cd frontend
 npm run build     # genera la carpeta dist/
 npm run preview   # sirve el build para probarlo
 ```
+
+---
+
+## Tests
+
+El backend tiene una suite de integración con **Vitest** y **supertest**: levanta la aplicación de Express y prueba los cinco endpoints contra una base SQLite **en memoria**, así que no toca ni depende de `database.sqlite`.
+
+```bash
+cd backend
+npm test             # corre la suite una vez
+npm run test:watch   # queda escuchando cambios
+```
+
+Son 32 tests repartidos en dos archivos:
+
+- `tests/usuarios.crud.test.js` — listado (vacío, completo, ordenado y filtrado con `?q=`), alta con id autogenerado y verificación de que el registro quedó en la base, consulta por id, edición de email y domicilio, y baja comprobando que el usuario desaparece del listado y de la base.
+- `tests/usuarios.validaciones.test.js` — campos obligatorios, formatos (email, DNI, pasaporte), normalización del email a minúsculas, unicidad de documento, legajo y email (409), campos que no se editan y respuestas 404.
+
+Se usa Vitest en lugar de Jest porque el proyecto es ESM (`"type": "module"`) y Vitest lo soporta sin configuración adicional.
 
 ---
 
@@ -192,3 +213,4 @@ curl -X DELETE http://localhost:3001/api/usuarios/1
 - **Estado con hooks**: `useUsuarios` centraliza el listado y lo actualiza en memoria tras cada baja, evitando recargas.
 - **Modal propio en lugar de `window.confirm`** para no bloquear el navegador y mantener la estética del panel.
 - **Sin credenciales en el repo**: SQLite es un archivo local, `.env` está ignorado y solo se versiona `.env.example`.
+- **Tests aislados**: con `DB_STORAGE=:memory:` la suite corre sobre una base descartable en RAM, sin ensuciar ni depender del archivo de desarrollo.

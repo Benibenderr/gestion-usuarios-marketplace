@@ -4,10 +4,14 @@ import { Sequelize } from 'sequelize';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Carpeta raiz del backend (backend/), usada como base para el archivo .sqlite
+// Carpeta raíz del backend (backend/), usada como base para el archivo .sqlite
 const RAIZ_BACKEND = path.resolve(__dirname, '..', '..');
 
-const storage = path.resolve(RAIZ_BACKEND, process.env.DB_STORAGE || './database.sqlite');
+const configurado = process.env.DB_STORAGE || './database.sqlite';
+
+// DB_STORAGE=:memory: levanta una base descartable en RAM. La usan los tests.
+const enMemoria = configurado === ':memory:';
+const storage = enMemoria ? ':memory:' : path.resolve(RAIZ_BACKEND, configurado);
 
 /**
  * Instancia única de Sequelize apuntando a SQLite.
@@ -16,7 +20,10 @@ const storage = path.resolve(RAIZ_BACKEND, process.env.DB_STORAGE || './database
 export const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage,
-  logging: false
+  logging: false,
+  // En memoria, cada conexión del pool sería una base distinta:
+  // por eso se limita a una sola conexión.
+  ...(enMemoria ? { pool: { max: 1, idle: Infinity } } : {})
 });
 
 export const rutaBaseDeDatos = storage;
